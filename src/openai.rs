@@ -15,7 +15,7 @@ use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(tag="role", content="content")]
-pub enum ContentType {
+pub enum RoleType {
     assistant(String),
     user(String),
     system(String),
@@ -23,7 +23,7 @@ pub enum ContentType {
 
 #[derive(Deserialize, Debug, Clone)]
 struct ResponseMessageUnit {
-    message:ContentType,
+    message:RoleType,
 }
 
 #[derive(Deserialize, Debug)]
@@ -44,7 +44,7 @@ struct OpenAIErrorResponse {
 #[derive(Serialize, Deserialize, Debug)]
 struct OpenAIRequest {
     model: String,
-    messages: Vec<ContentType>,
+    messages: Vec<RoleType>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -70,12 +70,12 @@ pub type OError = Box<dyn std::error::Error + Send + Sync>;
 pub type Result<T> 
     = std::result::Result<T, OError>;
 
-pub async fn ask(messages: Vec<ContentType>) -> Result<String> {
+pub async fn ask(messages: Vec<RoleType>) -> Result<String> {
 
     //let mut re:Vec<String> = Vec::new();
     //for i in messages.clone() {
     //    match i {
-    //        ContentType::user(s) => {
+    //        RoleType::user(s) => {
     //            re.push(s)
     //        },
     //        _ => {
@@ -123,13 +123,13 @@ pub async fn ask(messages: Vec<ContentType>) -> Result<String> {
             let body = hyper::body::aggregate(res).await?;
             let json: OpenAIResponse = serde_json::from_reader(body.reader())?;
             match json.choices[0].clone() {
-                ResponseMessageUnit{message:ContentType::assistant(x)} => {
+                ResponseMessageUnit{message:RoleType::assistant(x)} => {
                     Ok(x)
                 },
-                ResponseMessageUnit{message:ContentType::user(x)} => {
+                ResponseMessageUnit{message:RoleType::user(x)} => {
                     Ok(format!("Human: {}", x))
                 },
-                ResponseMessageUnit{message:ContentType::system(x)} => {
+                ResponseMessageUnit{message:RoleType::system(x)} => {
                     Ok(format!("System: {}", x))
                 }
             }

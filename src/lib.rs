@@ -1,7 +1,7 @@
 mod openai;
 
 pub use openai::{
-    ContentType,
+    RoleType,
     OError,
     Result,
     ask,
