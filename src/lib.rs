@@ -6,6 +6,7 @@ pub use openai::{
     Result,
     ask,
     draw,
+    FuncParamUnit,
+    FuncParams,
+    FuncUnit,
 };
-
-

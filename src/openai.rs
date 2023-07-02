@@ -1,20 +1,20 @@
 
 use std::{
-    fmt::format,
-    str::FromStr,
-    error,
-    result,
     env,
+    error,
+    fmt,
+    fmt::Display,
 };
+use std::collections::HashMap;
 
 use http::status::StatusCode;
 
-use hyper::{body::Buf, header, Body, Client, Request, Error};
+use hyper::{body::Buf, header, Body, Client, Request};
 use hyper_tls::HttpsConnector;
 use serde_derive::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-#[serde(tag="role", content="content")]
+//#[serde(tag="role", content="content")]
 pub enum RoleType {
     assistant(String),
     user(String),
@@ -22,13 +22,20 @@ pub enum RoleType {
 }
 
 #[derive(Deserialize, Debug, Clone)]
-struct ResponseMessageUnit {
-    message:RoleType,
+pub struct ResponseMessageUnit {
+    role: RoleType,
+    content: Option<String>,
+    functions_call: Option<FuncResponse>
+}
+
+#[derive(Deserialize, Debug, Clone)]
+struct ResponseChoiseUnit {
+    message:ResponseMessageUnit,
 }
 
 #[derive(Deserialize, Debug)]
 struct OpenAIResponse {
-    choices: Vec<ResponseMessageUnit>,
+    choices: Vec<ResponseChoiseUnit>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -41,10 +48,17 @@ struct OpenAIErrorResponse {
     error: ResponseErrorContent,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct RequestMessageUnit {
+    role: RoleType,
+    content: Option<String>,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 struct OpenAIRequest {
     model: String,
-    messages: Vec<RoleType>,
+    messages: Vec<RequestMessageUnit>,
+    functions: Vec<FuncUnit>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -65,12 +79,68 @@ struct OpenAIImageResponse {
     data: Vec<OpenAIImageResponseData>
 }
 
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FuncParamUnit {
+    #[serde(rename = "type")]
+    pub t: String,
+    #[serde(rename = "enum")]
+    pub e: Vec<String>,
+    pub description: String,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FuncParams {
+    #[serde(rename = "type")]
+    pub t: String,
+    pub required: Vec<String>,
+    pub properties: HashMap<String, FuncParamUnit>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FuncUnit {
+    pub name: String,
+    pub description: String,
+    pub parameters: FuncParams,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FuncResponse {
+    pub name: String,
+    pub arguments: HashMap<String, String>,
+}
+
+
 pub type OError = Box<dyn std::error::Error + Send + Sync>;
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct OpenAIError {
+    err: String
+}
+impl Display for OpenAIError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        Display::fmt(&*self.err, f)
+    }
+}
+impl error::Error for OpenAIError {
+}
+impl OpenAIError {
+    pub fn from_string(error_msg: String) -> Self {
+        Self {
+            err: error_msg
+        }
+    }
+    pub fn from_str(error_msg: &str) -> Self {
+        Self {
+            err: error_msg.to_string()
+        }
+    }
+}
 
 pub type Result<T> 
     = std::result::Result<T, OError>;
 
-pub async fn ask(messages: Vec<RoleType>) -> Result<String> {
+pub async fn ask(messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>) -> Result<ResponseMessageUnit> {
 
     //let mut re:Vec<String> = Vec::new();
     //for i in messages.clone() {
@@ -98,9 +168,9 @@ pub async fn ask(messages: Vec<RoleType>) -> Result<String> {
         Ok(x) => {
             api_key = x;
         },
-        Err(e) => {
-            println!("Need OPENAI_API_KEY");
-            return Ok("".to_string());
+        Err(_) => {
+            eprintln!("Need OPENAI_API_KEY");
+            return Err(Box::new(OpenAIError::from_str("Need OPENAI_API_KEY")))
         }
     };
     let auth_header_val = format!("Bearer {}", api_key);
@@ -108,6 +178,7 @@ pub async fn ask(messages: Vec<RoleType>) -> Result<String> {
     let openai_request = OpenAIRequest {
         model,
         messages,
+        functions,
     };
 
     let body = Body::from(serde_json::to_string(&openai_request)?);
@@ -122,28 +193,33 @@ pub async fn ask(messages: Vec<RoleType>) -> Result<String> {
         StatusCode::OK => {
             let body = hyper::body::aggregate(res).await?;
             let json: OpenAIResponse = serde_json::from_reader(body.reader())?;
-            match json.choices[0].clone() {
-                ResponseMessageUnit{message:RoleType::assistant(x)} => {
-                    Ok(x)
-                },
-                ResponseMessageUnit{message:RoleType::user(x)} => {
-                    Ok(format!("Human: {}", x))
-                },
-                ResponseMessageUnit{message:RoleType::system(x)} => {
-                    Ok(format!("System: {}", x))
-                }
-            }
+            return Ok(json.choices[0].clone().message);
+            //match clone() {
+            //    ResponseMessageUnit{message:RoleType::assistant(x)} => {
+            //        Ok(x)
+            //    },
+            //    ResponseMessageUnit{message:RoleType::user(x)} => {
+            //        Ok(format!("Human: {}", x))
+            //    },
+            //    ResponseMessageUnit{message:RoleType::system(x)} => {
+            //        Ok(format!("System: {}", x))
+            //    },
+            //    ResponseMessageUnit{message:RoleType::None} => {
+            //        Ok("".to_string())
+            //    }
+            //}
         },
         StatusCode::BAD_REQUEST => {
             let body = hyper::body::aggregate(res).await?;
             let error: OpenAIErrorResponse = serde_json::from_reader(body.reader())?;
-            Ok(error.error.message)
+            Err(Box::new(OpenAIError::from_string(error.error.message)))
+            //Ok(error.error.message)
         },
         _ => {
             eprintln!("Error res: {:?}", res);
             let body = hyper::body::aggregate(res).await?;
             let error: OpenAIErrorResponse = serde_json::from_reader(body.reader())?;
-            Ok(error.error.message)
+            Err(Box::new(OpenAIError::from_string(error.error.message)))
         }
     }
 }
@@ -206,13 +282,13 @@ pub async fn draw(prompt: String, n: i32, size: String) -> Result<String> {
         StatusCode::BAD_REQUEST => {
             let body = hyper::body::aggregate(res).await?;
             let error: OpenAIErrorResponse = serde_json::from_reader(body.reader())?;
-            Ok(error.error.message)
+            Err(Box::new(OpenAIError::from_string(error.error.message)))
         },
         _ => {
             eprintln!("Error res: {:?}", res);
             let body = hyper::body::aggregate(res).await?;
             let error: OpenAIErrorResponse = serde_json::from_reader(body.reader())?;
-            Ok(error.error.message)
+            Err(Box::new(OpenAIError::from_string(error.error.message)))
         }
     }
 }
