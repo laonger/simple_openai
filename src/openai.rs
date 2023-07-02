@@ -23,9 +23,9 @@ pub enum RoleType {
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ResponseMessageUnit {
-    role: RoleType,
-    content: Option<String>,
-    functions_call: Option<FuncResponse>
+    pub role: RoleType,
+    pub content: Option<String>,
+    pub functions_call: Option<FuncResponse>
 }
 
 #[derive(Deserialize, Debug, Clone)]
