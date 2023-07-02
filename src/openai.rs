@@ -16,9 +16,9 @@ use serde_derive::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 //#[serde(tag="role", content="content")]
 pub enum RoleType {
-    assistant(String),
-    user(String),
-    system(String),
+    assistant,
+    user,
+    system,
 }
 
 #[derive(Deserialize, Debug, Clone)]
