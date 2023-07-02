@@ -50,8 +50,8 @@ struct OpenAIErrorResponse {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RequestMessageUnit {
-    role: RoleType,
-    content: Option<String>,
+    pub role: RoleType,
+    pub content: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
