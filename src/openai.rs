@@ -194,6 +194,7 @@ pub async fn ask(
     match res.status() {
         StatusCode::OK => {
             let body = hyper::body::aggregate(res).await?;
+            println!("openai res body: {:?}", body);
             let json: OpenAIResponse = serde_json::from_reader(body.reader())?;
             return Ok(json.choices[0].clone().message);
             //match clone() {
