@@ -140,7 +140,9 @@ impl OpenAIError {
 pub type Result<T> 
     = std::result::Result<T, OError>;
 
-pub async fn ask(messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>) -> Result<ResponseMessageUnit> {
+pub async fn ask(
+        messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>
+    ) -> Result<ResponseMessageUnit> {
 
     //let mut re:Vec<String> = Vec::new();
     //for i in messages.clone() {
