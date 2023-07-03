@@ -35,7 +35,8 @@ struct OpenAIErrorResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuncResponse {
     pub name: String,
-    pub arguments: HashMap<String, String>,
+    //pub arguments: HashMap<String, String>,
+    pub arguments: Value,
 }
 
 #[derive(Deserialize, Debug, Clone)]
