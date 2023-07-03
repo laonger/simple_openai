@@ -198,25 +198,21 @@ pub async fn ask(
             let mut body = hyper::body::aggregate(res).await?;
             //println!("openai res body: {:?}", String::from_utf8(body.reader()));
             let b = body.copy_to_bytes(10240);
-            let json: OpenAIResponse = match serde_json
+            let json_raw: Value = match serde_json
                 ::from_reader(body.reader()) {
                     Ok(j) => j,
                     Err(e) => {
-                        eprintln!("json parse Error: {:?}", e);
-                        let j: Value = match serde_json
-                            ::from_reader(b.reader()){
-                            Ok(jj) => {
-                                eprintln!("json parse Error1: {:?}", jj);
-                                jj
-                            },
-                            Err(ee) => {
-                                eprintln!("json parse Error2 : {:?}", e);
-                                return Err(Box::new(e))
-                            }
-                        };
                         return Err(Box::new(e))
                     }
             };
+            let json: OpenAIResponse = match serde_json
+                ::from_value(json_raw.clone()){
+                    Ok(j) => j,
+                    Err(e) => {
+                        eprintln!("json parse Error: {:?}\n{:?}", e, json_raw);
+                        return Err(Box::new(e))
+                    }
+                };
             println!("openai res json, {:?}", json);
             return Ok(json.choices[0].clone().message);
             //match clone() {
