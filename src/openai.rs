@@ -213,7 +213,7 @@ pub async fn ask(
                         return Err(Box::new(e))
                     }
                 };
-            println!("openai res json, {:?}", json);
+            //println!("openai res json, {:?}", json);
             return Ok(json.choices[0].clone().message);
             //match clone() {
             //    ResponseMessageUnit{message:RoleType::assistant(x)} => {
