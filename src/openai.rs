@@ -22,10 +22,26 @@ pub enum RoleType {
 }
 
 #[derive(Deserialize, Debug, Clone)]
+struct ResponseErrorContent {
+    message:String,
+}
+
+#[derive(Deserialize, Debug)]
+struct OpenAIErrorResponse {
+    error: ResponseErrorContent,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct FuncResponse {
+    pub name: String,
+    pub arguments: HashMap<String, String>,
+}
+
+#[derive(Deserialize, Debug, Clone)]
 pub struct ResponseMessageUnit {
     pub role: RoleType,
     pub content: Option<String>,
-    pub functions_call: Option<FuncResponse>
+    pub function_call: Option<FuncResponse>
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -38,15 +54,6 @@ struct OpenAIResponse {
     choices: Vec<ResponseChoiseUnit>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
-struct ResponseErrorContent {
-    message:String,
-}
-
-#[derive(Deserialize, Debug)]
-struct OpenAIErrorResponse {
-    error: ResponseErrorContent,
-}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct RequestMessageUnit {
@@ -68,6 +75,8 @@ struct OpenAIImageRequest {
     size: String
 }
 
+
+
 #[derive(Serialize, Deserialize, Debug)]
 struct OpenAIImageResponseData {
     url: String,
@@ -78,7 +87,6 @@ struct OpenAIImageResponse {
     created: i64,
     data: Vec<OpenAIImageResponseData>
 }
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuncParamUnit {
@@ -103,13 +111,6 @@ pub struct FuncUnit {
     pub description: String,
     pub parameters: FuncParams,
 }
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct FuncResponse {
-    pub name: String,
-    pub arguments: HashMap<String, String>,
-}
-
 
 pub type OError = Box<dyn std::error::Error + Send + Sync>;
 
