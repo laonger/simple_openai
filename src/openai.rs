@@ -197,7 +197,6 @@ pub async fn ask(
         StatusCode::OK => {
             let mut body = hyper::body::aggregate(res).await?;
             //println!("openai res body: {:?}", String::from_utf8(body.reader()));
-            let b = body.copy_to_bytes(10240);
             let json_raw: Value = match serde_json
                 ::from_reader(body.reader()) {
                     Ok(j) => j,
