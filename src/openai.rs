@@ -12,6 +12,7 @@ use http::status::StatusCode;
 use hyper::{body::Buf, header, Body, Client, Request};
 use hyper_tls::HttpsConnector;
 use serde_derive::{Deserialize, Serialize};
+use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 //#[serde(tag="role", content="content")]
@@ -194,9 +195,28 @@ pub async fn ask(
     let res = client.request(req).await?;
     match res.status() {
         StatusCode::OK => {
-            let body = hyper::body::aggregate(res).await?;
+            let mut body = hyper::body::aggregate(res).await?;
             //println!("openai res body: {:?}", String::from_utf8(body.reader()));
-            let json: OpenAIResponse = serde_json::from_reader(body.reader())?;
+            let b = body.copy_to_bytes(1024000);
+            let json: OpenAIResponse = match serde_json
+                ::from_reader(body.reader()) {
+                    Ok(j) => j,
+                    Err(e) => {
+                        eprintln!("json parse Error: {:?}", e);
+                        let j: Value = match serde_json
+                            ::from_reader(b.reader()){
+                            Ok(jj) => {
+                                eprintln!("json parse Error1: {:?}", jj);
+                                jj
+                            },
+                            Err(ee) => {
+                                eprintln!("json parse Error2 : {:?}", e);
+                                return Err(Box::new(e))
+                            }
+                        };
+                        return Err(Box::new(e))
+                    }
+            };
             println!("openai res json, {:?}", json);
             return Ok(json.choices[0].clone().message);
             //match clone() {
