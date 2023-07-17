@@ -51,9 +51,17 @@ struct ResponseChoiseUnit {
     message:ResponseMessageUnit,
 }
 
+#[derive(Deserialize, Debug, Clone)]
+struct ResponseTokenUnit {
+    prompt_tokens: usize,
+    completion_tokens: usize,
+    total_tokens: usize
+}
+
 #[derive(Deserialize, Debug)]
 struct OpenAIResponse {
     choices: Vec<ResponseChoiseUnit>,
+    usage: ResponseTokenUnit
 }
 
 
@@ -145,7 +153,7 @@ pub type Result<T>
 
 pub async fn ask(
         messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>
-    ) -> Result<ResponseMessageUnit> {
+    ) -> Result<(ResponseMessageUnit, usize, usize)> {
 
     //let mut re:Vec<String> = Vec::new();
     //for i in messages.clone() {
@@ -214,7 +222,11 @@ pub async fn ask(
                     }
                 };
             //println!("openai res json, {:?}", json);
-            return Ok(json.choices[0].clone().message);
+            return Ok((
+                json.choices[0].clone().message,
+                json.usage.prompt_tokens,
+                json.usage.completion_tokens
+            ));
             //match clone() {
             //    ResponseMessageUnit{message:RoleType::assistant(x)} => {
             //        Ok(x)
