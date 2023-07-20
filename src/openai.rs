@@ -112,7 +112,7 @@ pub struct FuncParams {
     #[serde(rename = "type")]
     pub t: String,
     pub required: Vec<String>,
-    pub properties: HashMap<String, FuncParamUnit>,
+    pub properties: Option<HashMap<String, FuncParamUnit>>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
