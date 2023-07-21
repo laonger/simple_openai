@@ -107,27 +107,21 @@ pub struct FuncParamUnit {
     pub description: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum FuncParamType {
-    Null,
-    Value,
-    Object(HashMap<String, FuncParamUnit>),
-}
-
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuncParams {
     #[serde(rename = "type")]
     pub t: String,
     pub required: Vec<String>,
-    pub properties: FuncParamType,
+    pub properties: HashMap<String, FuncParamUnit>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuncUnit {
     pub name: String,
     pub description: String,
-    pub parameters: FuncParams,
+    #[serde(default)]
+    pub parameters: Option<FuncParams>,
 }
 
 pub type OError = Box<dyn std::error::Error + Send + Sync>;

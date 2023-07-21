@@ -9,7 +9,6 @@ pub use openai::{
     RequestMessageUnit,
     ResponseMessageUnit,
     FuncParamUnit,
-    FuncParamType,
     FuncParams,
     FuncUnit,
 };
