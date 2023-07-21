@@ -108,11 +108,19 @@ pub struct FuncParamUnit {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum FuncParamType {
+    Null,
+    Value,
+    Object(HashMap<String, FuncParamUnit>),
+}
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct FuncParams {
     #[serde(rename = "type")]
     pub t: String,
     pub required: Vec<String>,
-    pub properties: Option<HashMap<String, FuncParamUnit>>,
+    pub properties: FuncParamType,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
