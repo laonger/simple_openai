@@ -1,4 +1,3 @@
-
 use std::{
     env,
     error,
@@ -8,6 +7,8 @@ use std::{
 use std::collections::HashMap;
 
 use http::status::StatusCode;
+
+use tokio;
 
 use hyper::{body::Buf, header, Body, Client, Request};
 use hyper_tls::HttpsConnector;
@@ -109,6 +110,7 @@ pub struct FuncParamUnit {
 
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+//pub struct FuncParams {
 pub struct FuncParams {
     #[serde(rename = "type")]
     pub t: String,
@@ -174,7 +176,8 @@ pub async fn ask(
     let client = Client::builder().build(https);
     let uri = "https://api.openai.com/v1/chat/completions";
 
-    let model = String::from("gpt-3.5-turbo");
+    //let model = String::from("gpt-3.5-turbo");
+    let model = String::from("gpt-4-0613");
     //let stop = String::from("\n");
 
     let mut api_key = String::new();
@@ -327,3 +330,29 @@ pub async fn draw(prompt: String, n: i32, size: String) -> Result<String> {
         }
     }
 }
+
+
+#[tokio::test]
+async fn function_name_test() {
+    let model = String::from("gpt-3.5-turbo");
+    let openai_request = OpenAIRequest {
+        model,
+        messages: vec![
+            RequestMessageUnit {
+                role: RoleType::user,
+                content: None,
+            },
+        ],
+        functions: vec![
+            FuncUnit{
+                name: "set_role".to_string(),
+                description: "if users want to clear the bot's role set".to_string(),
+                parameters: None
+            }
+        ]
+    };
+
+    eprintln!("{}", serde_json::to_string(&openai_request).unwrap());
+    
+}
+
