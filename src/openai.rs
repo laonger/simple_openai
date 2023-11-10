@@ -177,7 +177,8 @@ pub async fn ask(
     let uri = "https://api.openai.com/v1/chat/completions";
 
     //let model = String::from("gpt-3.5-turbo");
-    let model = String::from("gpt-4-0613");
+    //let model = String::from("gpt-4-0613");
+    let model = String::from("gpt-4-vision-preview");
     //let stop = String::from("\n");
 
     let mut api_key = String::new();
