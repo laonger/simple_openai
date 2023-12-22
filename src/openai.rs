@@ -159,19 +159,6 @@ pub async fn ask(
         messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>
     ) -> Result<(ResponseMessageUnit, usize, usize)> {
 
-    //let mut re:Vec<String> = Vec::new();
-    //for i in messages.clone() {
-    //    match i {
-    //        RoleType::user(s) => {
-    //            re.push(s)
-    //        },
-    //        _ => {
-    //        }
-    //    }
-    //};
-    //return Ok(re.join(""));
-
-
     let https = HttpsConnector::new();
     let client = Client::builder().build(https);
     let uri = "https://api.openai.com/v1/chat/completions";
@@ -200,7 +187,9 @@ pub async fn ask(
         functions,
     };
 
-    let body = Body::from(serde_json::to_string(&openai_request)?);
+    let r = serde_json::to_string(&openai_request)?;
+    println!("{:?}", r.clone());
+    let body = Body::from(r);
 
     let req = Request::post(uri)
         .header(header::CONTENT_TYPE, "application/json")
@@ -210,7 +199,7 @@ pub async fn ask(
     let res = client.request(req).await?;
     match res.status() {
         StatusCode::OK => {
-            let mut body = hyper::body::aggregate(res).await?;
+            let body = hyper::body::aggregate(res).await?;
             //println!("openai res body: {:?}", String::from_utf8(body.reader()));
             let json_raw: Value = match serde_json
                 ::from_reader(body.reader()) {
@@ -233,26 +222,11 @@ pub async fn ask(
                 json.usage.prompt_tokens,
                 json.usage.completion_tokens
             ));
-            //match clone() {
-            //    ResponseMessageUnit{message:RoleType::assistant(x)} => {
-            //        Ok(x)
-            //    },
-            //    ResponseMessageUnit{message:RoleType::user(x)} => {
-            //        Ok(format!("Human: {}", x))
-            //    },
-            //    ResponseMessageUnit{message:RoleType::system(x)} => {
-            //        Ok(format!("System: {}", x))
-            //    },
-            //    ResponseMessageUnit{message:RoleType::None} => {
-            //        Ok("".to_string())
-            //    }
-            //}
         },
         StatusCode::BAD_REQUEST => {
             let body = hyper::body::aggregate(res).await?;
             let error: OpenAIErrorResponse = serde_json::from_reader(body.reader())?;
             Err(Box::new(OpenAIError::from_string(error.error.message)))
-            //Ok(error.error.message)
         },
         _ => {
             eprintln!("Error res: {:?}", res);
