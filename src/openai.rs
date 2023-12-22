@@ -165,7 +165,7 @@ pub async fn ask(
 
     //let model = String::from("gpt-3.5-turbo");
     //let model = String::from("gpt-4-0613");
-    let model = String::from("gpt-4-vision-preview");
+    let model = String::from("gpt-4-1106-preview");
     //let stop = String::from("\n");
 
     let mut api_key = String::new();
@@ -188,7 +188,6 @@ pub async fn ask(
     };
 
     let r = serde_json::to_string(&openai_request)?;
-    println!("{:?}", r.clone());
     let body = Body::from(r);
 
     let req = Request::post(uri)
