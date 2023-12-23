@@ -76,7 +76,7 @@ pub struct RequestMessageUnit {
 struct OpenAIRequest {
     model: String,
     messages: Vec<RequestMessageUnit>,
-    functions: Vec<FuncUnit>,
+    functions: Option<Vec<FuncUnit>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -156,7 +156,7 @@ pub type Result<T>
     = std::result::Result<T, OError>;
 
 pub async fn ask(
-        messages: Vec<RequestMessageUnit>, functions: Vec<FuncUnit>
+        messages: Vec<RequestMessageUnit>, functions: Option<Vec<FuncUnit>>
     ) -> Result<(ResponseMessageUnit, usize, usize)> {
 
     let https = HttpsConnector::new();
@@ -317,13 +317,13 @@ async fn function_name_test() {
                 content: None,
             },
         ],
-        functions: vec![
+        functions: Some(vec![
             FuncUnit{
                 name: "set_role".to_string(),
                 description: "if users want to clear the bot's role set".to_string(),
                 parameters: None
             }
-        ]
+        ])
     };
 
     eprintln!("{}", serde_json::to_string(&openai_request).unwrap());
