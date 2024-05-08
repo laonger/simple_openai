@@ -1,4 +1,6 @@
 mod openai;
+mod utils;
+mod errors;
 
 pub use openai::{
     RoleType,
@@ -6,6 +8,7 @@ pub use openai::{
     Result,
     ask,
     draw,
+    speak,
     RequestMessageUnit,
     ResponseMessageUnit,
     FuncParamUnit,
