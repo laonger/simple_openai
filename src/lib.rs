@@ -9,6 +9,7 @@ pub use openai::{
     ask,
     draw,
     speak,
+    OpenAISpeedVoice,
     RequestMessageUnit,
     ResponseMessageUnit,
     FuncParamUnit,

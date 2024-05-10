@@ -4,8 +4,8 @@ use std::{
     error,
     fmt,
     fmt::Display,
-    fs::File,
 };
+use tempfile;
 use std::collections::HashMap;
 
 
@@ -289,9 +289,6 @@ struct OpenAISpeedRequest {
     voice: String,
 }
 
-pub struct OpenAISpeedResult {
-}
-
 
 fn get_voice (voice: OpenAISpeedVoice) -> String {
     match voice {
@@ -306,8 +303,10 @@ fn get_voice (voice: OpenAISpeedVoice) -> String {
 }
 
 pub async fn speak(
-        text: String, voice: OpenAISpeedVoice, mut output: File
-    ) -> Result<OpenAISpeedResult> {
+        text: String,
+        voice: OpenAISpeedVoice,
+        mut output: &tempfile::NamedTempFile
+    ) -> Result<tempfile::NamedTempFile> {
 
     let url = "https://api.openai.com/v1/audio/speech".to_string();
 
@@ -337,7 +336,7 @@ pub async fn speak(
                         });
                 }
             }
-            return Ok(OpenAISpeedResult{});
+            return Ok(output);
         },
         StatusCode::BAD_REQUEST => {
             let body = res.collect().await?.aggregate();
